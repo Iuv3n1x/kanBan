@@ -223,3 +223,139 @@ function handleDrop(e, targetAreaIndex) {
 
     loadCards();
 }
+
+function loadAreas() {
+    let areas = JSON.parse(localStorage.getItem('areaData'));
+
+    if (!areas) { //!
+        areas = [
+            {
+                "title": "To Do",
+                "description": "Aufgaben, die noch erledigt werden müssen."
+            },
+            {
+                "title": "In Arbeit",
+                "description": "Aufgaben, an denen gerade gearbeitet wird."
+            },
+            {
+                "title": "Fertig",
+                "description": "Alles, was bereits abgeschlossen wurde."
+            }
+        ];
+        localStorage.setItem('areaData', JSON.stringify(areas));
+    }
+
+    // Clear everything at first
+    board.innerHTML = '';
+
+    areas.forEach((area, areaIndex) => {
+        const article = document.createElement('article');
+        article.className = 'kanban-column';
+
+        const colors = ['blue', 'green', 'purple'];
+        const color = colors[areaIndex % colors.length];
+
+        const sectionHeader = document.createElement('div');
+        sectionHeader.classList = [`column-header column-${color}`];
+
+        const sectionTitle = document.createElement('div');
+        sectionTitle.className = 'column-title';
+
+        const sectionHeading = document.createElement('h2');
+        sectionHeading.id = `areaTitle_${areaIndex}`;
+        sectionHeading.textContent = area.title;
+
+        const sectionCardCounter = document.createElement('span');
+        sectionCardCounter.className = 'card-count';
+        sectionCardCounter.id = `cardCount_${areaIndex}`;
+        sectionCardCounter.textContent = '0'; // TODO
+
+        sectionTitle.appendChild(sectionHeading);
+        sectionTitle.appendChild(sectionCardCounter);
+
+        const sectionActions = document.createElement('div');
+        sectionActions.className = 'column-actions';
+
+        const renameSectionBtn = document.createElement('button');
+        renameSectionBtn.classList = 'column-button editTitle';
+        renameSectionBtn.ariaLabel = 'Spalte bearbeiten';
+        renameSectionBtn.textContent = '✎';
+        renameSectionBtn.addEventListener('click', () => {
+            renameHeader(`${areaIndex}`);
+        });
+
+        const deleteSectionBtn = document.createElement('button');
+        deleteSectionBtn.className = 'column-button delete';
+        deleteSectionBtn.ariaLabel = 'Spalte löschen';
+        deleteSectionBtn.textContent = '×';
+        deleteSectionBtn.addEventListener('click', () => {
+            let currentAreas = JSON.parse(localStorage.getItem('areaData')) || [];
+            const targetIndex = currentAreas.findIndex(a => a.title === area.title);
+
+            if (targetIndex > -1) {
+                currentAreas.splice(targetIndex, 1);
+                localStorage.setItem('areaData', JSON.stringify(currentAreas));
+
+                for (let i = targetIndex; i <= currentAreas.length; i++) {
+                    const nextCards = localStorage.getItem(`cards_${i + 1}`);
+                    if (nextCards !== null) {
+                        localStorage.setItem(`cards_${i}`, nextCards);
+                    } else {
+                        localStorage.removeItem(`cards_${i}`);
+                    }
+                }
+
+                loadAreas();
+                loadCards();
+            }
+        });
+
+        sectionActions.appendChild(renameSectionBtn);
+        sectionActions.appendChild(deleteSectionBtn);
+
+        sectionHeader.appendChild(sectionTitle);
+        sectionHeader.appendChild(sectionActions);
+
+        const sectionDescription = document.createElement('div');
+        sectionDescription.className = 'column-description';
+        sectionDescription.id = `areaDescription_${areaIndex}`;
+        sectionDescription.textContent = area.description;
+
+        const cardArea = document.createElement('div');
+        cardArea.className = 'cards';
+        cardArea.id = `cards_${areaIndex}`;
+
+        const newCardContainer = document.createElement('div');
+        newCardContainer.className = 'new-card';
+
+        const newCardInput = document.createElement('input');
+        newCardInput.className = 'areaInput';
+        newCardInput.id = `cardInput_${areaIndex}`;
+        newCardInput.type = 'text';
+        newCardInput.placeholder = 'Neue Karte hinzufügen...';
+        newCardInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+
+                addCardBtns[areaIndex].click();
+            }
+        });
+
+        const newCardBtn = document.createElement('button');
+        newCardBtn.className = 'add-card-button';
+        newCardBtn.textContent = '+';
+        newCardBtn.addEventListener('click', () => {
+            addCard(`cardInput_${areaIndex}`, areaIndex);
+        });
+
+        newCardContainer.appendChild(newCardInput);
+        newCardContainer.appendChild(newCardBtn);
+
+        article.appendChild(sectionHeader);
+        article.appendChild(sectionDescription);
+        article.appendChild(cardArea);
+        article.appendChild(newCardContainer);
+
+        board.appendChild(article);
+    });
+}
