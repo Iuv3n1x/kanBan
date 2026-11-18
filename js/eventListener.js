@@ -2,6 +2,8 @@ const boardHeading = document.getElementById('boardHeading');
 const areaHeadings = [document.getElementById('areaTitle_0'), document.getElementById('areaTitle_1'), document.getElementById('areaTitle_2')];
 const areaDescriptions = [document.getElementById('areaDescription_0'), document.getElementById('areaDescription_1'), document.getElementById('areaDescription_2')];
 
+const areaInputs = document.getElementsByClassName('areaInput');
+
 const editBoardBtn = document.getElementById('editBoardBtn');
 const columnBtns = document.getElementsByClassName('editTitle')
 const addCardBtns = document.getElementsByClassName('add-card-button');
@@ -28,4 +30,14 @@ Array.from(addCardBtns).forEach((btn, i) => {
     btn.addEventListener('click', () => {
         addCard(`cardInput_${i}`, i);
     })
+});
+
+Array.from(areaInputs).forEach((input, i) => {
+    input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+
+            addCardBtns[i].click();
+        }
+    });
 });
